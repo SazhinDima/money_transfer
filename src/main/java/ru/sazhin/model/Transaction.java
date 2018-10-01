@@ -1,20 +1,33 @@
 package ru.sazhin.model;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+@Entity
 public class Transaction {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    private Account from;
-    private Account to;
-    private BigDecimal ammount;
 
-    public Transaction(long id, Account from, Account to, BigDecimal ammount) {
+    @ManyToOne(optional=false)
+    private Account from;
+
+    @ManyToOne(optional=false)
+    private Account to;
+
+    @Column
+    private BigDecimal amount;
+
+    public Transaction() {
+    }
+
+    public Transaction(long id, Account from, Account to, BigDecimal amount) {
         this.id = id;
         this.from = from;
         this.to = to;
-        this.ammount = ammount;
+        this.amount = amount;
     }
 
     public long getId() {
@@ -29,8 +42,8 @@ public class Transaction {
         return to;
     }
 
-    public BigDecimal getAmmount() {
-        return ammount;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
     @Override
@@ -41,12 +54,12 @@ public class Transaction {
         return id == that.id &&
                 Objects.equals(from, that.from) &&
                 Objects.equals(to, that.to) &&
-                Objects.equals(ammount, that.ammount);
+                Objects.equals(amount, that.amount);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, from, to, ammount);
+        return Objects.hash(id, from, to, amount);
     }
 
     @Override
@@ -55,7 +68,7 @@ public class Transaction {
                 "id=" + id +
                 ", from=" + from +
                 ", to=" + to +
-                ", ammount=" + ammount +
+                ", ammount=" + amount +
                 '}';
     }
 }

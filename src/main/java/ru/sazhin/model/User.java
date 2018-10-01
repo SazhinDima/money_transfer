@@ -1,11 +1,20 @@
 package ru.sazhin.model;
 
+import javax.persistence.*;
 import java.util.Objects;
 
+@Entity
 public class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column
     private String name;
+
+    public User() {
+    }
 
     public User(long id, String name) {
         this.id = id;

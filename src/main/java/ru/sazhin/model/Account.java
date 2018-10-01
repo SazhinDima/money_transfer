@@ -1,17 +1,28 @@
 package ru.sazhin.model;
 
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+@Entity
 public class Account {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
+    @Column
     private BigDecimal amount;
 
-    private final Lock lock = new ReentrantLock();
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final Lock writeLock = readWriteLock.writeLock();
+    private final Lock readLock = readWriteLock.readLock();
 
+    public Account() {
+    }
 
     public Account(long id, BigDecimal amount) {
         this.id = id;
@@ -23,20 +34,29 @@ public class Account {
     }
 
     public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void changeAmount(BigDecimal diff) {
-        lock.lock();
+        readLock.lock();
         try {
-            amount = amount.add(diff);
+            return amount;
         } finally {
-            lock.unlock();
+            readLock.unlock();
         }
     }
 
-    public Lock getLock() {
-        return lock;
+    public void changeAmount(BigDecimal diff) {
+        writeLock.lock();
+        try {
+            amount = amount.add(diff);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    public Lock getWriteLock() {
+        return writeLock;
+    }
+
+    public Lock getReadLock() {
+        return readLock;
     }
 
     @Override
