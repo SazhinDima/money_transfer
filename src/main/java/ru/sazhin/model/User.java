@@ -1,23 +1,27 @@
 package ru.sazhin.model;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.util.Objects;
 
-@Entity
+@DatabaseTable
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
+    @DatabaseField(generatedId = true)
     private long id;
 
-    @Column
+    @JsonProperty
+    @DatabaseField
     private String name;
 
     public User() {
     }
 
-    public User(long id, String name) {
-        this.id = id;
+    public User(String name) {
         this.name = name;
     }
 

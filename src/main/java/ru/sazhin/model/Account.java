@@ -1,36 +1,52 @@
 package ru.sazhin.model;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-@Entity
+@DatabaseTable
 public class Account {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
+    @DatabaseField(generatedId = true)
     private long id;
 
-    @Column
+    @JsonProperty
+    @DatabaseField(foreign=true, foreignAutoCreate = true, foreignAutoRefresh = true)
+    private User user;
+
+    @JsonProperty
+    @DatabaseField
     private BigDecimal amount;
 
+    @JsonIgnore
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    @JsonIgnore
     private final Lock writeLock = readWriteLock.writeLock();
+    @JsonIgnore
     private final Lock readLock = readWriteLock.readLock();
 
     public Account() {
     }
 
-    public Account(long id, BigDecimal amount) {
-        this.id = id;
+    public Account(User user, BigDecimal amount) {
+        this.user = user;
         this.amount = amount;
     }
 
     public long getId() {
         return id;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     public BigDecimal getAmount() {

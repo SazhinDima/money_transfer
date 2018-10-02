@@ -7,5 +7,5 @@ import java.math.BigDecimal;
 
 public interface TransactionService {
 
-    Transaction transact(Account from, Account to, BigDecimal amount);
+    Transaction transact(long fromId, long toId, long amount);
 }

@@ -1,30 +1,36 @@
 package ru.sazhin.model;
 
-import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@Entity
+@DatabaseTable
 public class Transaction {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
+    @DatabaseField(generatedId = true)
     private long id;
 
-    @ManyToOne(optional=false)
+    @JsonProperty
+    @DatabaseField(foreign=true, foreignAutoCreate = true, foreignAutoRefresh = true)
     private Account from;
 
-    @ManyToOne(optional=false)
+    @JsonProperty
+    @DatabaseField(foreign=true, foreignAutoCreate = true, foreignAutoRefresh = true)
     private Account to;
 
-    @Column
+    @JsonProperty
+    @DatabaseField
     private BigDecimal amount;
 
     public Transaction() {
     }
 
-    public Transaction(long id, Account from, Account to, BigDecimal amount) {
-        this.id = id;
+    public Transaction(Account from, Account to, BigDecimal amount) {
         this.from = from;
         this.to = to;
         this.amount = amount;
