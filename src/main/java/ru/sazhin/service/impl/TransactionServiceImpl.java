@@ -1,96 +1,77 @@
 package ru.sazhin.service.impl;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
+import ru.sazhin.Database;
 import ru.sazhin.model.Account;
 import ru.sazhin.model.Transaction;
 import ru.sazhin.service.TransactionService;
-import ru.sazhin.utils.Connection;
 import ru.sazhin.utils.Preconditions;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.concurrent.locks.Lock;
+import java.util.List;
 
 @Path("/transaction")
 @Produces(MediaType.APPLICATION_JSON)
 public class TransactionServiceImpl implements TransactionService {
 
-    private Dao<Account, Long> accountDao;
+    private Dao<Account, Long> accountDao = Database.getInstance().getDao(Account.class);
+    private Dao<Transaction, Long> transactionDao = Database.getInstance().getDao(Transaction.class);
 
-    public TransactionServiceImpl() {
+    @GET
+    @Path("/{id}")
+    @Override
+    public Transaction get(@PathParam("id") long id) {
         try {
-            accountDao =
-                    DaoManager.createDao(Connection.INSTANCE.getConnection(), Account.class);
+            return transactionDao.queryForId(id);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new WebApplicationException(e);
         }
     }
 
     @GET
+    @Path("/all")
+    @Override
+    public List<Transaction> getAll() {
+        try {
+            return transactionDao.queryForAll();
+        } catch (SQLException e) {
+            throw new WebApplicationException(e);
+        }
+    }
+
+    @POST
     @Path("/from/{from}/to/{to}/amount/{amount}")
     @Override
     public Transaction transact(
             @PathParam("from") long fromId,
             @PathParam("to") long toId,
-            @PathParam("amount") long amount) {
-        Account from = null;
-        Account to = null;
+            @PathParam("amount") BigDecimal amount) {
         try {
-            from = accountDao.queryForId(fromId);
-            to = accountDao.queryForId(toId);
+            String fromStr = accountDao
+                    .queryRaw("select amount from Account where id = ? for update", Long.toString(fromId))
+                    .getFirstResult()[0];
+            BigDecimal fromValue = new BigDecimal(fromStr);
+
+            Preconditions.checkNotNegative(fromValue.subtract(amount), "Amount should be not negative");
+
+            accountDao.executeRawNoArgs("update Account set amount = amount - "
+                    + amount.toString() + " where id = " + Long.toString(fromId));
+            accountDao.executeRawNoArgs("update Account set amount = amount + "
+                    + amount.toString() + " where id = " +Long.toString(toId));
+
+            Transaction transaction = new Transaction(accountDao.queryForId(fromId), accountDao.queryForId(toId), amount);
+            transactionDao.create(transaction);
+
+            return transaction;
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new WebApplicationException(e);
         }
 
-        BigDecimal amnt = BigDecimal.valueOf(amount);
 
-        Preconditions.checkNotNull(from, "Source account is null");
-        Preconditions.checkNotNull(to, "Target account is null");
-        Preconditions.checkNotNull(amount, "Amount account is null");
-        Preconditions.checkNotNegative(amnt, "Amount should be not negative");
-
-        Preconditions.checkNotNegative(from.getAmount().subtract(amnt),
-                "Source amount should be not negative after transaction");
-
-        Lock lock1;
-        Lock lock2;
-        if (from.getId() > to.getId()) {
-            lock1 = from.getWriteLock();
-            lock2 = to.getWriteLock();
-        } else {
-            lock2 = from.getWriteLock();
-            lock1 = to.getWriteLock();
-        }
-
-        lock1.lock();
-        try {
-            lock2.lock();
-            try {
-                Preconditions.checkNotNegative(from.getAmount().subtract(amnt),
-                        "Source amount should be not negative after transaction");
-
-                from.changeAmount(amnt.multiply(BigDecimal.valueOf(-1)));
-                to.changeAmount(amnt);
-            } finally {
-                lock2.unlock();
-            }
-        } finally {
-            lock1.unlock();
-        }
-
-        try {
-            accountDao.update(from);
-            accountDao.update(to);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return new Transaction(from, to, amnt);
     }
+
 }

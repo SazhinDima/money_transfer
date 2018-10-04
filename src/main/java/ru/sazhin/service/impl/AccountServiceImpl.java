@@ -1,12 +1,10 @@
 package ru.sazhin.service.impl;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
+import ru.sazhin.Database;
 import ru.sazhin.model.Account;
 import ru.sazhin.model.User;
 import ru.sazhin.service.AccountService;
-import ru.sazhin.service.UserService;
-import ru.sazhin.utils.Connection;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -17,16 +15,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class AccountServiceImpl implements AccountService {
 
-    private Dao<Account, Long> accountDao;
-
-    public AccountServiceImpl() {
-        try {
-            accountDao =
-                    DaoManager.createDao(Connection.INSTANCE.getConnection(), Account.class);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private Dao<Account, Long> accountDao = Database.getInstance().getDao(Account.class);
 
     @GET
     @Path("/{id}")

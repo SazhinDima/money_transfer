@@ -1,10 +1,9 @@
 package ru.sazhin.service.impl;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
+import ru.sazhin.Database;
 import ru.sazhin.model.User;
 import ru.sazhin.service.UserService;
-import ru.sazhin.utils.Connection;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -15,16 +14,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserServiceImpl implements UserService {
 
-    private Dao<User, Long> userDao;
-
-    public UserServiceImpl() {
-        try {
-            userDao =
-                    DaoManager.createDao(Connection.INSTANCE.getConnection(), User.class);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private Dao<User, Long> userDao = Database.getInstance().getDao(User.class);
 
     @GET
     @Path("/{id}")
