@@ -7,6 +7,7 @@ import ru.sazhin.service.UserService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class UserServiceImpl implements UserService {
         try {
             return userDao.queryForId(id);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.NOT_FOUND);
         }
     }
 
@@ -34,7 +35,7 @@ public class UserServiceImpl implements UserService {
         try {
             return userDao.queryForAll();
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.NOT_FOUND);
         }
     }
 
@@ -45,7 +46,7 @@ public class UserServiceImpl implements UserService {
         try {
             userDao.create(user);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
         }
         return user;
     }
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
         try {
             userDao.deleteById(id);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
         }
     }
 

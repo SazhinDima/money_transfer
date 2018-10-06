@@ -10,16 +10,25 @@ import ru.sazhin.service.impl.UserServiceImpl;
 
 import java.util.Arrays;
 
+/**
+ * Singleton class for working with web server.
+ */
 public class WebServer {
 
     public static class SingletonHolder {
         public static final WebServer HOLDER_INSTANCE = new WebServer();
     }
 
+    /**
+     * Get singleton.
+     */
     public static WebServer getInstance() {
         return WebServer.SingletonHolder.HOLDER_INSTANCE;
     }
 
+    /**
+     * Start web server.
+     */
     public void start() {
         Server server = new Server(8080);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

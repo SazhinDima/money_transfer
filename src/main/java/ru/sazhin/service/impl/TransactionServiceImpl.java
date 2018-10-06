@@ -1,6 +1,7 @@
 package ru.sazhin.service.impl;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.misc.TransactionManager;
 import ru.sazhin.Database;
 import ru.sazhin.model.Account;
 import ru.sazhin.model.Transaction;
@@ -9,6 +10,7 @@ import ru.sazhin.utils.Preconditions;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
@@ -50,27 +52,38 @@ public class TransactionServiceImpl implements TransactionService {
             @PathParam("to") long toId,
             @PathParam("amount") BigDecimal amount) {
         try {
-            String fromStr = accountDao
-                    .queryRaw("select amount from Account where id = ? for update", Long.toString(fromId))
-                    .getFirstResult()[0];
-            BigDecimal fromValue = new BigDecimal(fromStr);
+            return TransactionManager.callInTransaction(Database.getInstance().getConnection(), () -> {
+                        String[] row = accountDao
+                                .queryRaw("select amount from Account where id = ? for update",
+                                        Long.toString(fromId))
+                                .getFirstResult();
+                        accountDao
+                                .queryRaw("select amount from Account where id = ? for update",
+                                        Long.toString(toId));
 
-            Preconditions.checkNotNegative(fromValue.subtract(amount), "Amount should be not negative");
+                        Preconditions.checkNotNull(row, "Account not found");
 
-            accountDao.executeRawNoArgs("update Account set amount = amount - "
-                    + amount.toString() + " where id = " + Long.toString(fromId));
-            accountDao.executeRawNoArgs("update Account set amount = amount + "
-                    + amount.toString() + " where id = " +Long.toString(toId));
+                        BigDecimal from = new BigDecimal(row[0]);
 
-            Transaction transaction = new Transaction(accountDao.queryForId(fromId), accountDao.queryForId(toId), amount);
-            transactionDao.create(transaction);
+                        Preconditions.checkNotNegative(from.subtract(amount),
+                                "Amount should be not negative");
 
-            return transaction;
+                        accountDao.executeRawNoArgs("update Account set amount = amount - "
+                                + amount.toString() + " where id = " + Long.toString(fromId));
+                        accountDao.executeRawNoArgs("update Account set amount = amount + "
+                                + amount.toString() + " where id = " + Long.toString(toId));
 
+                        Transaction transaction = new Transaction(
+                                accountDao.queryForId(fromId),
+                                accountDao.queryForId(toId), amount);
+                        transactionDao.create(transaction);
+
+                        return transaction;
+                    }
+            );
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
         }
-
 
     }
 

@@ -13,22 +13,33 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 
+
+/**
+ * Singleton class for working with database.
+ */
 public class Database {
 
     public static class SingletonHolder {
         public static final Database HOLDER_INSTANCE = new Database();
     }
 
+    /**
+     * Get singleton.
+     */
     public static Database getInstance() {
         return SingletonHolder.HOLDER_INSTANCE;
     }
 
     private ConnectionSource connectionSource;
 
+    /**
+     * Get connection.
+     */
     public ConnectionSource getConnection() {
         if (connectionSource == null) {
             try {
-                connectionSource = new JdbcPooledConnectionSource("jdbc:h2:mem:transaction");
+                connectionSource =
+                        new JdbcPooledConnectionSource("jdbc:h2:mem:transaction;MVCC=true");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -36,6 +47,9 @@ public class Database {
         return connectionSource;
     }
 
+    /**
+     * Close connction.
+     */
     public void closeConnection() {
         if (connectionSource != null) {
             try {
@@ -47,6 +61,9 @@ public class Database {
         }
     }
 
+    /**
+     * Create database structure.
+     */
     public void createTables() {
         try {
             TableUtils.createTableIfNotExists(Database.getInstance().getConnection(), Account.class);
@@ -57,6 +74,9 @@ public class Database {
         }
     }
 
+    /**
+     * Create init data. For testing purposes.
+     */
     public void initData() {
         try {
             Dao<User, Long> userDao = DaoManager.createDao(Database.getInstance().getConnection(), User.class);
@@ -75,6 +95,9 @@ public class Database {
         }
     }
 
+    /**
+     * Get DAO.
+     */
     public <D extends Dao<T, ?>, T> D getDao(Class<T> clazz) {
         try {
             return DaoManager.createDao(Database.getInstance().getConnection(), clazz);

@@ -8,6 +8,7 @@ import ru.sazhin.service.AccountService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class AccountServiceImpl implements AccountService {
         try {
             return accountDao.queryForId(id);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.NOT_FOUND);
         }
     }
 
@@ -35,7 +36,7 @@ public class AccountServiceImpl implements AccountService {
         try {
             return accountDao.queryForId(id).getUser();
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.NOT_FOUND);
         }
     }
 
@@ -57,7 +58,7 @@ public class AccountServiceImpl implements AccountService {
         try {
             accountDao.create(account);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
         }
         return account;
     }
@@ -69,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
         try {
             accountDao.deleteById(id);
         } catch (SQLException e) {
-            throw new WebApplicationException(e);
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
         }
     }
 

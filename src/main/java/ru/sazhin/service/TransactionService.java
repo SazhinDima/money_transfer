@@ -11,5 +11,12 @@ public interface TransactionService {
 
     List<Transaction> getAll();
 
+    /**
+     * Create transaction.
+     * @param fromId - Account id (Source).
+     * @param toId - Account id (Target).
+     * @param amount - Amount.
+     * @return Transaction.
+     */
     Transaction transact(long fromId, long toId, BigDecimal amount);
 }

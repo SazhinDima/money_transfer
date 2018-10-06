@@ -29,7 +29,7 @@ public class TransactionServiceImplTest {
     }
 
     @Test
-    public void testTransact1() throws SQLException {
+    public void testTransact() throws SQLException {
         Account accountFrom = new Account(new User(), BigDecimal.TEN);
         accountDao.create(accountFrom);
         Account accountTo = new Account(new User(), BigDecimal.TEN);

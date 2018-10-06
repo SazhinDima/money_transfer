@@ -15,6 +15,9 @@ public interface AccountService {
 
     void delete(long id);
 
+    /**
+     * Get user related with account.
+     */
     User getUser(long id);
 
 }

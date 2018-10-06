@@ -92,43 +92,6 @@ public class TransactionServiceImplConcurrencyTest {
         Assert.assertEquals(BigDecimal.valueOf(1020), accountDao.queryForId(acc9.getId()).getAmount());
     }
 
-    @Test
-    public void testManyTransactionsAccounts() throws InterruptedException, SQLException {
-        User user = new User();
-        Account acc0 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc0);
-        Account acc1 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc1);
-        Account acc2 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc2);
-        Account acc3 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc3);
-        Account acc4 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc4);
-        Account acc5 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc5);
-        Account acc6 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc6);
-        Account acc7 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc7);
-        Account acc8 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc8);
-        Account acc9 = new Account(user, BigDecimal.valueOf(1000));
-        accountDao.create(acc9);
-
-        List<Runnable> transactions = new ArrayList<>();
-
-        Random random = new Random();
-        for (int i = 0; i < 1_000; i++) {
-            transactions.add(() -> transactionService.transact(
-                    random.nextInt(10) + 1,
-                    random.nextInt(10) + 1,
-                    BigDecimal.valueOf(random.nextInt(10) + 1)));
-        }
-
-        assertConcurrent(transactions, 10);
-    }
-
     public static void assertConcurrent(final List<? extends Runnable> runnables, final int maxTimeoutSeconds) throws InterruptedException {
         final int numThreads = runnables.size();
         final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
@@ -151,7 +114,8 @@ public class TransactionServiceImplConcurrencyTest {
                 });
             }
             // wait until all threads are ready
-            assertTrue("Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent", allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
+            assertTrue("Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
+                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
             // start all test runners
             afterInitBlocker.countDown();
             assertTrue("Timeout! More than" + maxTimeoutSeconds + "seconds", allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
